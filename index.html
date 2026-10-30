@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHOP BOS</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#0b1220;color:white}
+header{padding:22px;background:#111c30;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:25px;font-weight:bold;color:#35dc91}
+main{padding:20px;max-width:1100px;margin:auto}
+.card{background:#152238;padding:20px;border-radius:15px;margin:15px 0}
+h1,h2{margin-top:0}
+button{background:#20c982;color:#06140e;border:0;padding:13px 18px;border-radius:9px;font-weight:bold;cursor:pointer;margin:5px}
+input,select{width:100%;padding:13px;margin:8px 0;background:#25344c;color:white;border:1px solid #40516c;border-radius:8px}
+nav{display:flex;gap:7px;flex-wrap:wrap}
+nav button{background:#263650;color:white}
+.stat{display:inline-block;background:#20334d;padding:18px;border-radius:12px;margin:5px;min-width:135px}
+.green{color:#35dc91}
+.hidden{display:none}
+table{width:100%;border-collapse:collapse}
+td,th{padding:12px;border-bottom:1px solid #34435b;text-align:left}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">SHOP BOS</div>
+<div>Business Management</div>
+</header>
+
+<main>
+
+<section id="auth">
+<div class="card">
+<h1>Welcome to SHOP BOS</h1>
+<p>Manage your business smarter.</p>
+<h3>Create account / Login</h3>
+<input id="name" placeholder="Full name">
+<input id="email" type="email" placeholder="Email address">
+<input id="password" type="password" placeholder="Password">
+<button onclick="signup()">Create Account</button>
+<button onclick="login()">Login</button>
+<p id="message"></p>
+</div>
+</section>
+
+<section id="app" class="hidden">
+<h2>Business Dashboard</h2>
+<p id="welcome"></p>
+
+<nav>
+<button onclick="page('dashboard')">Dashboard</button>
+<button onclick="page('products')">Inventory</button>
+<button onclick="page('sales')">Sales</button>
+<button onclick="page('expenses')">Expenses</button>
+<button onclick="page('plans')">Subscriptions</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<div id="dashboard" class="card">
+<h2>Overview</h2>
+<div class="stat">Sales<br><h2 id="totalSales">D0</h2></div>
+<div class="stat">Expenses<br><h2 id="totalExpenses">D0</h2></div>
+<div class="stat">Profit<br><h2 id="profit">D0</h2></div>
+<div class="stat">Products<br><h2 id="count">0</h2></div>
+<div class="card">
+<h3>Recent Activity</h3>
+<p id="activity">Welcome to your dashboard.</p>
+</div>
+</div>
+
+<div id="products" class="card hidden">
+<h2>Inventory Management</h2>
+<input id="productName" placeholder="Product name">
+<input id="productPrice" type="number" placeholder="Selling price">
+<input id="productCost" type="number" placeholder="Buying cost">
+<input id="productStock" type="number" placeholder="Quantity">
+<button onclick="addProduct()">Add Product</button>
+<h3>Your Products</h3>
+<div id="productList"></div>
+</div>
+
+<div id="sales" class="card hidden">
+<h2>Record a Sale</h2>
+<select id="saleProduct"></select>
+<input id="saleQty" type="number" placeholder="Quantity sold">
+<button onclick="addSale()">Record Sale</button>
+<h3>Sales History</h3>
+<div id="salesList"></div>
+</div>
+
+<div id="expenses" class="card hidden">
+<h2>Business Expenses</h2>
+<input id="expenseName" placeholder="Expense description">
+<input id="expenseAmount" type="number" placeholder="Amount in GMD">
+<button onclick="addExpense()">Save Expense</button>
+<div id="expenseList"></div>
+</div>
+
+<div id="plans" class="card hidden">
+<h2>SHOP BOS Membership</h2>
+<p>Your account starts with a 30-day free trial.</p>
+
+<div class="card">
+<h3>Starter</h3>
+<h2>D1,500/month</h2>
+<p>Inventory, sales and basic reports.</p>
+<button onclick="choosePlan('Starter',1500)">Choose Starter</button>
+</div>
+
+<div class="card">
+<h3>Pro</h3>
+<h2>D2,500/month</h2>
+<p>Advanced analytics, expenses and business reports.</p>
+<button onclick="choosePlan('Pro',2500)">Choose Pro</button>
+</div>
+
+<div class="card">
+<h3>Business Annual</h3>
+<h2>D10,000/year</h2>
+<p>Advanced business management and annual membership.</p>
+<button onclick="choosePlan('Business Annual',10000)">Choose Annual</button>
+</div>
+
+<div class="card">
+<h3>Wave Payment</h3>
+<p>Send payment to:</p>
+<h2 class="green">+220 833915456</h2>
+<p>After paying, enter your transaction reference below.</p>
+<input id="transaction" placeholder="Wave transaction reference">
+<button onclick="submitPayment()">Submit Payment</button>
+<p id="paymentStatus"></p>
+<p>Payments remain pending until manually verified by the SHOP BOS administrator.</p>
+</div>
+</div>
+</section>
+</main>
+
+<script>
+let user=null;
+let products=[];
+let sales=[];
+let expenses=[];
+let selectedPlan=null;
+let total=0;
+
+function signup(){
+let n=document.getElementById('name').value.trim();
+let e=document.getElementById('email').value.trim();
+let p=document.getElementById('password').value;
+if(!n||!e||p.length<6){
+message.textContent="Enter your name, email and password (at least 6 characters).";
+return;
+}
+if(localStorage.getItem('shopbos_'+e)){
+message.textContent="Account already exists. Please log in.";
+return;
+}
+let u={name:n,email:e,password:p,trial:Date.now(),status:"TRIAL"};
+localStorage.setItem('shopbos_'+e,JSON.stringify(u));
+user=u;
+start();
+}
+
+function login(){
+let e=document.getElementById('email').value.trim();
+let p=document.getElementById('password').value;
+let u=localStorage.getItem('shopbos_'+e);
+if(!u){message.textContent="Account not found.";return;}
+u=JSON.parse(u);
+if(u.password!==p){message.textContent="Incorrect password.";return;}
+user=u;
+start();
+}
+
+function start(){
+auth.classList.add('hidden');
+app.classList.remove('hidden');
+welcome.textContent="Welcome, "+user.name;
+refresh();
+}
+
+function logout(){
+user=null;
+app.classList.add('hidden');
+auth.classList.remove('hidden');
+}
+
+function page(id){
+['dashboard','products','sales','expenses','plans'].forEach(x=>{
+document.getElementById(x).classList.add('hidden');
+});
+document.getElementById(id).classList.remove('hidden');
+refresh();
+}
+
+function addProduct(){
+let n=productName.value.trim();
+let price=Number(productPrice.value);
+let cost=Number(productCost.value);
+let stock=Number(productStock.value);
+if(!n||price<=0||cost<0||stock<0)return alert("Enter valid product details.");
+products.push({n,price,cost,stock});
+productName.value='';
+productPrice.value='';
+productCost.value='';
+productStock.value='';
+refresh();
+}
+
+function addSale(){
+let i=Number(saleProduct.value);
+let q=Number(saleQty.value);
+let item=products[i];
+if(!item||q<=0||q>item.stock)return alert("Invalid quantity or insufficient stock.");
+item.stock-=q;
+sales.push({name:item.n,total:item.price*q,cost:item.cost*q});
+saleQty.value='';
+refresh();
+}
+
+function addExpense(){
+let n=expenseName.value.trim();
+let a=Number(expenseAmount.value);
+if(!n||a<=0)return alert("Enter valid expense details.");
+expenses.push({n,a});
+expenseName.value='';
+expenseAmount.value='';
+refresh();
+}
+
+function choosePlan(name,amount){
+selectedPlan={name,amount};
+page('plans');
+alert("Selected "+name+". Make your Wave payment and enter its transaction reference.");
+}
+
+function submitPayment(){
+let ref=transaction.value.trim();
+if(!selectedPlan)return alert("Choose a subscription plan first.");
+if(!ref)return alert("Enter your transaction reference.");
+paymentStatus.textContent="Payment submitted: PENDING ADMIN VERIFICATION.";
+}
+
+function refresh(){
+let s=sales.reduce((a,b)=>a+b.total,0);
+let c=sales.reduce((a,b)=>a+b.cost,0);
+let ex=expenses.reduce((a,b)=>a+b.a,0);
+totalSales.textContent="D"+s.toLocaleString();
+totalExpenses.textContent="D"+ex.toLocaleString();
+profit.textContent="D"+(s-c-ex).toLocaleString();
+count.textContent=products.length;
+productList.innerHTML=products.map(x=>
+`<p>${x.n} | Price: D${x.price} | Stock: ${x.stock}</p>`).join('');
+saleProduct.innerHTML=products.map((x,i)=>
+`<option value="${i}">${x.n} (${x.stock} available)</option>`).join('');
+salesList.innerHTML=sales.map(x=>
+`<p>${x.name}: D${x.total}</p>`).join('');
+expenseList.innerHTML=expenses.map(x=>
+`<p>${x.n}: D${x.a}</p>`).join('');
+}
+</script>
+</body>
+</html>
